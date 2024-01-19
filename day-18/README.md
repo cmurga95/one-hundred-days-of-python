@@ -1,0 +1,1 @@
+Day 18 was about loops, libraries and methods. Learning how to read documentation mostly.
