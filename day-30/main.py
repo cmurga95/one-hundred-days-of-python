@@ -3,24 +3,26 @@ import csv
 from tkinter import messagebox
 import random
 import pandas as pd
+import json
+import os 
 # import pyperclip
 # --------------- Search and error handling --------------- #
 def search():
+    search_value = search_entry.get()
     try:
-        file = open("temp.csv")
-        csv_reader = csv.reader(file, delimiter = ",")
-        df = pd.DataFrame(csv_reader)
-        search_value = search_entry.get()
-        # d = df[df[0] == search_value][2].reset_index()
-        website_values = df.iloc[:,0].values
-        if search_value in website_values:
-            password_entry.insert(df[df[]])
+        with open("data.json", "r") as file:
+            data = json.load(file)
     except FileNotFoundError:
         messagebox.showerror(message = "Couldn't open file, check path.")
-    except KeyError as error_message:
-        messagebox.showerror(message = f"The key {error_message} does not exist.")
-    finally:
-        file.close()
+    else:
+        if search_value in data:
+            email = data[search_value]['email']
+            password = data[search_value]['password']
+            messagebox.showinfo(title = search_value,
+                                message=f"email: {email}\n"
+                                        f"password: {password}")
+        else:
+            messagebox.showinfo(title = "Error", message = f"No details for {search_value} exists.") 
         # raise TypeError("I made this up")
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 def password_gen():
@@ -52,7 +54,13 @@ def save_data():
     website = website_entry.get()
     email = email_entry.get()
     password = password_entry.get()
-
+    x_json = {
+        website:{
+            "email": email,
+            "password": password
+        }
+    }
+    file = "data.json"
     if len(website) == 0 or len(password) == 0 or len(email) == 0:
         messagebox.showwarning(title = "oops", message = "Don't leave empty fields")
     
@@ -61,6 +69,24 @@ def save_data():
                                                         f"\nPassword: {password}" 
                                                         "\nOk to save?")
         if is_ok:
+            #if file doesnt exists
+            if not os.path.exists(file):
+                #create a new file
+                with open(file, "w") as json_file:
+                    json.dump(x_json, json_file, indent = 4)
+
+            #if file exists
+            elif os.path.exists(file):
+                #open it in read mode 
+                with open(file, "r") as json_file:
+                #load the data to d
+                    d = json.load(json_file)
+                    #and update the old data with new data
+                    d.update(x_json)
+                with open(file, "w") as json_file:
+                    #dump the new data to the file
+                    json.dump(d, json_file, indent = 4)
+
             with open("temp.csv", mode = "a", newline = "") as csv_file:
                 csv_writer = csv.writer(csv_file)
                 csv_writer.writerow([website, email, password])
